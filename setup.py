@@ -9,8 +9,8 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='pybbm-private-messages',
-    version='0.0.1',
-    packages=['private_messages'],
+    version='0.0.2',
+    packages=['private_messages', 'private_messages.migrations'],
     include_package_data=True,
     install_requires=[
         'pybbm',
