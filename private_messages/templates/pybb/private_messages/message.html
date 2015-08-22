@@ -1,0 +1,74 @@
+{% extends 'pybb/base.html' %}
+
+{% load url from future %}
+{% load i18n pybb_tags %}
+
+{% pybb_get_profile user=message.sender as sender_profile %}
+{% pybb_get_profile user=request.user as user_profile %}
+
+{% block content %}
+    <table class="table table-bordered post">
+        <thead class="post-header">
+        <tr>
+        <th colspan="2">
+            <a class="permalink" href="{{ post.get_absolute_url }}">#</a>
+            <span class="updated">{% pybb_time message.sent %}</span>
+        </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="post-row">
+            <td class="post-info">
+                {% include "pybb/avatar.html" with user=message.sender %}
+
+                <div class="post-author">
+                    <a href="{{ sender_profile.get_absolute_url }}">
+                        <span class="post-username">{{ sender_profile.get_display_name }}</span>
+                    </a>
+                </div>
+                {% if request.user.is_superuser %}
+                    <div class="post-extra-info">{{ post.user_ip }}</div>
+                {% endif %}
+
+                <div class="post-controls">
+                    {% comment %} TODO Maybe allow sender to edit post while it is unread?
+                    {% if post|pybb_posted_by:user %}
+                        <a href="{% url 'pybb:edit_post' pk=post.id %}">{% trans "Edit" %}</a>
+                    {% endif %}
+                    {% if user.is_moderator %}
+                        <a onclick="pybb_delete_post('{% url 'pybb:delete_post' post.id %}',
+                                'post-{{ post.id }}', '{% trans 'Delete post?' %}'); return false;"
+                           href="{% url 'pybb:delete_post' post.id %}">{% trans "Delete" %}</a>
+                        {% if post.on_moderation %}
+                            <a href="{% url 'pybb:moderate_post' pk=post.id %}">{% trans "Approve post" %}</a>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if perms.pybb.change_post and user.is_staff %}
+                        <a href="{% url 'admin:pybb_post_change' post.id %}">{% trans 'Admin' %}</a>
+                    {% endif %}
+                    {% endcomment %}
+                </div>
+            </td>
+            <td class="post-content">
+                {{ message.body_html|safe }}
+
+                {% if user_profile.show_signatures and sender_profile.signature %}
+                    <div class="post-signature">
+                        {{ sender_profile.signature_html|safe }}
+                    </div>
+                {% endif %}
+
+                {% comment %} TODO reply buttons
+                <div class="post-related">
+                    {% if user|pybb_may_create_post:post.topic %}
+                        <a href="{% url 'pybb:add_post' topic.id %}?quote_id={{ post.id }}" class="quote-link">{% trans "quote" %}</a>
+                        <a href="#" class="quote-selected-link">{% trans "quote selected" %}</a>
+                    {% endif %}
+                </div>
+                {% endcomment %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+{% endblock content %}

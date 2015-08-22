@@ -1,0 +1,8 @@
+{% load url from future %}
+{% load i18n %}
+<span class='privatemessage-links'>
+    <a href="{% url 'private_messages:inbox' %}">{% blocktrans %}Private Messages: {{ total_msgs }}{% endblocktrans %}</a>
+    {% if unread_msgs %}
+    <b><a href="{% url 'private_messages:inbox' %}">{% blocktrans %}[{{ unread_msgs }} Unread]{% endblocktrans %}</a></b>
+    {% endif %}
+</span>

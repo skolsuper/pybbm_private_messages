@@ -1,0 +1,16 @@
+{% load url from future %}
+<form class="post-form" action="{% url 'private_messages:send_message' %}" method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <fieldset>
+    {% include "pybb/form_errors.html" %}
+    {% include "pybb/form_field.html" with field=form.receivers %}
+    {% include "pybb/form_field.html" with field=form.subject %}
+    {% include "pybb/form_field.html" with field=form.body %}
+    <div id='emoticons'>
+      {% for smile, url in form.available_smiles.items %}
+        <a href='#' title='{{ smile|safe }}'><img src='{{ STATIC_URL }}{{ form.smiles_prefix }}{{ url }}'></a>
+      {% endfor %}
+    </div>
+    <p class="submit">{% include "pybb/_button_submit.html" with submit_text=_('Send') %}</p>
+  </fieldset>
+</form>

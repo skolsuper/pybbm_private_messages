@@ -1,0 +1,13 @@
+{% extends 'pybb/base.html' %}
+
+{% load url from future %}
+{% load i18n pybb_tags %}
+
+{% pybb_get_profile user=message.sender as sender_profile %}
+{% pybb_get_profile user=request.user as user_profile %}
+
+{% block breadcrumb %}{% endblock %}
+
+{% block content %}
+    {% include "pybb/private_messages/form.html" %}
+{% endblock content %}
