@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='pybbm-private-messages',
-    version='0.0.2',
+    version='0.0.3',
     packages=['private_messages', 'private_messages.migrations'],
     include_package_data=True,
     install_requires=[
@@ -18,7 +18,7 @@ setup(
     license='MIT License',
     description='A private messaging plugin for the pybbm forum.',
     long_description=README,
-    url='http://www.example.com/',
+    url='https://github.com/skolsuper/pybbm_private_messages',
     author='James Keys',
     author_email='skolsuper@gmail.com',
     classifiers=[

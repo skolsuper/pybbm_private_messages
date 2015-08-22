@@ -23,7 +23,7 @@
                 <a href="{{ post_user_profile.get_absolute_url }}">
                     <p class="post-username">{{ post_user_profile.get_display_name }}</p>
                 </a>
-                <a href="{% url 'pybb:send_message' %}?to={{ post.user.id }}">
+                <a href="{% url 'private_messages:send_message' %}?to={{ post.user.id }}">
                     <span class="send-message">Send Private Message</span>
                 </a>
             </div>
