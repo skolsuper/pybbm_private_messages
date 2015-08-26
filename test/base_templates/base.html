@@ -1,4 +1,4 @@
-{% load url from future %}
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,15 +7,15 @@
     <!--[if lt IE 9]>
             <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-    <link rel="stylesheet" href="{{ STATIC_URL }}example_bootstrap.css" type='text/css'>
+    <link rel="stylesheet" href="{% static 'example_bootstrap.css' %}" type='text/css'>
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/themes/smoothness/jquery-ui.css" type="text/css"/>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/i18n/jquery-ui-i18n.min.js"></script>
     <script src="http://yandex.st/json2/2011-01-18/json2.min.js"></script>
-    <script src="{{ STATIC_URL }}csrf.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}pybb/js/pybbjs.js"></script>
+    <script src="{% static 'csrf.js' %}"></script>
+    <script type="text/javascript" src="{% static 'pybb/js/pybbjs.js' %}"></script>
     <style type="text/css">
         body {
             padding-top: -60px;
@@ -45,10 +45,13 @@
             <ul class="nav navbar-nav">
                 {% if request.user.is_authenticated %}
                     <li>
-                        <a href="{% url 'pybb:edit_profile' %}">Profile [logged as {{ request.user.username }}]</a>
+                        <a href="{% url 'pybb:edit_profile' %}">Profile [logged in as {{ request.user.username }}]</a>
                     </li>
                     <li>
                         <a href="{% url 'auth_logout' %}">Logout</a>
+                    </li>
+                    <li>
+                        {% block private_messages %}{% endblock %}
                     </li>
                     {% if request.user.is_superuser %}
                         <li>
