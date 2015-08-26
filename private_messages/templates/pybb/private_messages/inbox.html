@@ -25,6 +25,7 @@
             </th>
         </tr>
     </thead>
+    <tbody>
     {% for message in message_list %}
     <tr class="message-row{% if message.unread %} unread{% endif %}">
         <td class="message-sender">
@@ -39,10 +40,18 @@
         </td>
     </tr>
     {% empty %}
-    <td></td>
-    <td>{% trans "You don't have any messages" %}</td>
-    <td></td>
+    <tr>
+        <td></td>
+        <td>{% trans "You don't have any messages" %}</td>
+        <td></td>
+    </tr>
     {% endfor %}
+    </tbody>
+    <tfoot>
+    <tr>
+        <td><a href="{% url 'private_messages:send_message' %}" class="btn btn-primary">Compose Message</a></td>
+    </tr>
+    </tfoot>
 </table>
 
 {% endblock content %}

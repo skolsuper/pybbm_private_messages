@@ -4,15 +4,19 @@ from __future__ import unicode_literals
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.vary import vary_on_cookie
 
 from pybb import defaults
+from pybb.util import get_markup_engine
 from pybb.views import PaginatorMixin
 
 from private_messages.forms import MessageForm
 from private_messages.models import PrivateMessage, MessageHandler
+
+MarkupEngine = get_markup_engine()
 
 
 class InboxView(PaginatorMixin, generic.ListView):
@@ -43,7 +47,7 @@ class MessageView(generic.DetailView):
 
     def get_object(self, queryset=None):
         message = super(MessageView, self).get_object(queryset)
-        if message not in self.request.user.inbox.all() and message.sender != self.request.user:
+        if self.request.user not in message.receivers.all() and message.sender != self.request.user:
             raise PermissionDenied
         try:
             handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
@@ -64,7 +68,20 @@ class SendMessageView(generic.CreateView):
         return super(SendMessageView, self).dispatch(request, *args, **kwargs)
 
     def get_initial(self):
-        return {'receivers': self.request.GET.getlist('to')}
+        receivers = self.request.GET.getlist('to')
+        parent_pk = self.request.GET.get('reply')
+        reply_all = self.request.GET.get('all')
+        if receivers:
+            return {'receivers': receivers}
+        if parent_pk:
+            parent = get_object_or_404(PrivateMessage, pk=parent_pk)
+            if self.request.user not in parent.receivers.all() and self.request.user != parent.sender:
+                raise PermissionDenied
+            body = MarkupEngine.quote(parent.body)
+            initial = {'subject': 'RE:' + parent.root.subject, 'body': body, 'receivers': [parent.sender]}
+            if reply_all == 'true':
+                initial['receivers'] += parent.receivers.all()
+            return initial
 
     def form_valid(self, form):
         message = PrivateMessage(

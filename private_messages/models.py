@@ -24,6 +24,8 @@ class PrivateMessage(RenderableItem):
     class Meta(object):
         verbose_name = _('Private Message')
         verbose_name_plural = _('Private Messages')
+        get_latest_by = 'sent'
+        ordering = ['sent']
 
     sender = models.ForeignKey(get_user_model_path(),
                                related_name='outbox',
@@ -39,13 +41,25 @@ class PrivateMessage(RenderableItem):
                                        verbose_name=_('Recipients'))
     # Expected behaviour when deleting a sent message is that the recipient still has their copy
     sender_deleted = models.BooleanField(default=False)
+    parent = models.ForeignKey('self', related_name='child', null=True)
+    root = models.ForeignKey('self', null=True)
 
     def __str__(self):
         return ' '.join([str(self.sender), _('Private Message'), str(self.id)])
 
     def get_absolute_url(self):
-        return reverse('pybb:private_message', kwargs={'pk': self.id})
+        return reverse('private_messages:read_message', kwargs={'pk': self.id})
 
     def save(self, *args, **kwargs):
-      self.render()
-      super(PrivateMessage, self).save(*args, **kwargs)
+        self.render()
+        if self.parent:
+            self.root = self.parent.root
+        super(PrivateMessage, self).save(*args, **kwargs)
+        # Want to avoid null-checking every call to parent.root
+        if self.root is None:
+            self.root = self
+            super(PrivateMessage, self).save(update_fields=['root'])
+
+    @property
+    def last_child(self):
+        return PrivateMessage.objects.filter(root=self).latest()
