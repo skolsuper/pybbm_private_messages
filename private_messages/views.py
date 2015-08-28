@@ -58,7 +58,8 @@ class MessageView(generic.DetailView):
         if self.request.user not in message.receivers.all():
             raise PermissionDenied
         handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
-        handler.update(read=True)
+        handler.read = True
+        handler.save()
         return message
 
 

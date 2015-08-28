@@ -3,6 +3,7 @@
   {% csrf_token %}
   <fieldset>
     {% include "pybb/form_errors.html" %}
+    {{ form.parent }}
     {% include "pybb/form_field.html" with field=form.receivers %}
     {% include "pybb/form_field.html" with field=form.subject %}
     {% include "pybb/form_field.html" with field=form.body %}

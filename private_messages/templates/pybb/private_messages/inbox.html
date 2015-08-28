@@ -26,7 +26,8 @@
         </tr>
     </thead>
     <tbody>
-    {% for message in message_list %}
+    {% for thread in message_list %}
+    {% with message=thread.tail %}
     <tr class="message-row{% if message.unread %} unread{% endif %}">
         <td class="message-sender">
             {% pybb_get_profile user=message.sender as sender %}
@@ -39,6 +40,7 @@
             {% pybb_time message.sent %}
         </td>
     </tr>
+    {% endwith %}
     {% empty %}
     <tr>
         <td></td>
