@@ -33,6 +33,12 @@ class InboxView(PaginatorMixin, generic.ListView):
         return super(InboxView, self).dispatch(request, *args, **kwargs)
 
 
+class OutboxView(InboxView):
+
+    def get_queryset(self):
+        return MessageThread.objects.filter(messages__sender=self.request.user).distinct()
+
+
 class MessageView(generic.DetailView):
 
     queryset = PrivateMessage.objects.all()
