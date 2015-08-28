@@ -18,7 +18,7 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^', include('pybb.urls', namespace='pybb')),
-    url(r'^', include('private_messages.urls', namespace='private_messages')),
+    url(r'^messages/', include('private_messages.urls', namespace='private_messages')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^accounts/', include('registration.urls')),
 ]
