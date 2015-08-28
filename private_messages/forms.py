@@ -10,9 +10,11 @@ from private_messages.models import PrivateMessage
 
 class MessageForm(forms.ModelForm):
 
+    parent = forms.UUIDField(required=False, widget=forms.HiddenInput)
+
     class Meta(object):
         model = PrivateMessage
-        fields = ('receivers', 'subject', 'body',)
+        fields = ('receivers', 'subject', 'body', 'parent')
         widgets = {
             'body': util.get_markup_engine().get_widget_cls(),
         }

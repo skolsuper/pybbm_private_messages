@@ -20,6 +20,16 @@ class MessageHandler(models.Model):
     deleted = models.BooleanField(default=False)
 
 
+class MessageThread(models.Model):
+
+    @property
+    def head(self):
+        return self.messages.earliest()
+
+    def tail(self):
+        return self.messages.latest()
+
+
 @python_2_unicode_compatible
 class PrivateMessage(RenderableItem):
 
@@ -31,7 +41,7 @@ class PrivateMessage(RenderableItem):
 
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4)
     sender = models.ForeignKey(get_user_model_path(),
-                               related_name='outbox',
+                               related_name='sent_messages',
                                verbose_name=_('Sender'))
     sender_ip = models.IPAddressField(_('Sender IP'),
                                       blank=True,
@@ -40,29 +50,18 @@ class PrivateMessage(RenderableItem):
     subject = models.CharField(max_length=100, blank=True, default='[No Subject]')
     receivers = models.ManyToManyField(get_user_model_path(),
                                        through='MessageHandler',
-                                       related_name='inbox',
+                                       related_name='recd_messages',
                                        verbose_name=_('Recipients'))
     # Expected behaviour when deleting a sent message is that the recipient still has their copy
     sender_deleted = models.BooleanField(default=False)
-    parent = models.ForeignKey('self', related_name='child', null=True)
-    root = models.ForeignKey('self', null=True)
+    thread = models.ForeignKey(MessageThread, related_name='messages')
 
     def __str__(self):
-        return ' '.join([str(self.sender), _('Private Message'), str(self.id)])
+        return '{0} {1} {2}'.format(self.sender, _('Private Message'), self.uuid)
 
     def get_absolute_url(self):
-        return reverse('private_messages:read_message', kwargs={'pk': self.id})
+        return reverse('private_messages:read_message', kwargs={'pk': self.uuid})
 
     def save(self, *args, **kwargs):
         self.render()
-        if self.parent:
-            self.root = self.parent.root
         super(PrivateMessage, self).save(*args, **kwargs)
-        # Want to avoid null-checking every call to parent.root
-        if self.root is None:
-            self.root = self
-            super(PrivateMessage, self).save(update_fields=['root'])
-
-    @property
-    def last_child(self):
-        return PrivateMessage.objects.filter(root=self).latest()

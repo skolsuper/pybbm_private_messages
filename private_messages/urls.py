@@ -9,6 +9,6 @@ from private_messages.views import InboxView, MessageView, SendMessageView
 
 urlpatterns = [
     url(r'^$', InboxView.as_view(), name='inbox'),
-    url(r'^(?P<pk>[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15})/$', MessageView.as_view(), name='read_message'),
+    url(r'^(?P<pk>[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})/$', MessageView.as_view(), name='read_message'),
     url(r'^new/$', SendMessageView.as_view(), name='send_message'),
 ]

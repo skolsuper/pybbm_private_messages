@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
@@ -14,7 +14,7 @@ from pybb.util import get_markup_engine
 from pybb.views import PaginatorMixin
 
 from private_messages.forms import MessageForm
-from private_messages.models import PrivateMessage, MessageHandler
+from private_messages.models import PrivateMessage, MessageHandler, MessageThread
 
 MarkupEngine = get_markup_engine()
 
@@ -25,7 +25,7 @@ class InboxView(PaginatorMixin, generic.ListView):
     template_name = 'pybb/private_messages/inbox.html'
 
     def get_queryset(self):
-        return self.request.user.inbox.all().select_related()
+        return MessageThread.objects.filter(messages__receivers=self.request.user).distinct()
 
     @method_decorator(login_required)
     @method_decorator(vary_on_cookie)
@@ -47,14 +47,12 @@ class MessageView(generic.DetailView):
 
     def get_object(self, queryset=None):
         message = super(MessageView, self).get_object(queryset)
-        if self.request.user not in message.receivers.all() and message.sender != self.request.user:
+        if message.sender == self.request.user:
+            return message
+        if self.request.user not in message.receivers.all():
             raise PermissionDenied
-        try:
-            handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
-            handler.read = True
-            handler.save()
-        except MessageHandler.DoesNotExist:
-            pass
+        handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
+        handler.update(read=True)
         return message
 
 
@@ -78,19 +76,43 @@ class SendMessageView(generic.CreateView):
             if self.request.user not in parent.receivers.all() and self.request.user != parent.sender:
                 raise PermissionDenied
             body = MarkupEngine.quote(parent.body)
-            initial = {'subject': 'RE:' + parent.root.subject, 'body': body, 'receivers': [parent.sender]}
+            initial = {
+                'subject': reply_subject(parent.subject),
+                'body': body,
+                'receivers': [parent.sender],
+                'parent': parent_pk
+            }
             if reply_all == 'true':
-                initial['receivers'] += parent.receivers.all()
+                initial['receivers'] += parent.receivers.exclude(self.request.user)
             return initial
 
     def form_valid(self, form):
-        message = PrivateMessage(
+        parent_pk = form.cleaned_data['parent']
+        if not parent_pk:
+            thread = MessageThread.objects.create()
+        else:
+            try:
+                parent = PrivateMessage.objects.get(pk=parent_pk)
+            except PrivateMessage.NotFound:
+                raise SuspiciousOperation
+            thread = parent.thread
+        self.object = PrivateMessage.objects.create(
+            thread=thread,
             sender=self.request.user,
             sender_ip=self.request.META.get('REMOTE_ADDR', ''),
             subject=form.cleaned_data['subject'],
             body=form.cleaned_data['body'],
             )
-        message.save()
         for receiver in form.cleaned_data['receivers']:
-            MessageHandler(message=message, receiver=receiver).save()
-        return HttpResponseRedirect(message.get_absolute_url())
+            MessageHandler.objects.create(message=self.object, receiver=receiver)
+
+        return HttpResponseRedirect(self.get_success_url())
+    
+    def get_success_url(self):
+        return self.object.get_absolute_url()
+
+
+def reply_subject(string):
+    if string.startswith('RE:'):
+        return string
+    return 'RE: ' + string
