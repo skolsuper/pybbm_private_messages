@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='PrivateMessage',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('uuid', models.UUIDField(default=uuid.uuid4, serialize=False, primary_key=True)),
                 ('body', models.TextField(verbose_name='Message')),
                 ('body_html', models.TextField(verbose_name='HTML version')),
                 ('body_text', models.TextField(verbose_name='Text version')),
@@ -55,15 +55,6 @@ class Migration(migrations.Migration):
         migrations.AlterModelOptions(
             name='privatemessage',
             options={'ordering': ['sent'], 'get_latest_by': 'sent', 'verbose_name': 'Private Message', 'verbose_name_plural': 'Private Messages'},
-        ),
-        migrations.RemoveField(
-            model_name='privatemessage',
-            name='id',
-        ),
-        migrations.AddField(
-            model_name='privatemessage',
-            name='uuid',
-            field=models.UUIDField(default=uuid.uuid4, serialize=False, primary_key=True),
         ),
         migrations.CreateModel(
             name='MessageThread',
