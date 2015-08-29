@@ -1,6 +1,6 @@
 {% extends 'pybb/base.html' %}
 {% load url from future %}
-{% load i18n pybb_tags %}
+{% load i18n pybb_tags private_messages %}
 
 {% block private_messages %}{% endblock %}
 {% block breadcrumb %}{% endblock %}
@@ -27,7 +27,7 @@
     </thead>
     <tbody>
     {% for thread in message_list %}
-    {% with message=thread.tail %}
+    {% thread_tail thread user outbox as message %}
     <tr class="message-row{% if message.unread %} unread{% endif %}">
         <td class="message-sender">
             {% pybb_get_profile user=message.sender as sender %}
@@ -40,7 +40,6 @@
             {% pybb_time message.sent %}
         </td>
     </tr>
-    {% endwith %}
     {% empty %}
     <tr>
         <td></td>

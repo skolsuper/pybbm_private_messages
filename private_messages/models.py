@@ -21,13 +21,21 @@ class MessageHandler(models.Model):
 
 class MessageThread(models.Model):
 
+    class Meta:
+        ordering = ('-messages',)
+
     @property
     def head(self):
         return self.messages.earliest()
 
-    @property
-    def tail(self):
-        return self.messages.latest()
+    def tail(self, exclude_sender=None, sender=None):
+        assert exclude_sender is None or sender is None, "Cannot set both kwargs exclude_sender and sender"
+        qs = self.messages.all()
+        if exclude_sender is not None:
+            qs = qs.exclude(sender=exclude_sender)
+        elif sender is not None:
+            qs = qs.filter(sender=sender)
+        return qs.latest()
 
     def get_parents(self, message):
         assert self.messages.filter(message=message).exists(), "Cannot get parents of a message not in this thread"
@@ -79,6 +87,13 @@ class PrivateMessage(RenderableItem):
         except PrivateMessage.DoesNotExist:
             return None
         return parent
+
+    def unread(self, user):
+        try:
+            handler = MessageHandler.objects.get(message=self, receiver=user)
+        except MessageHandler.DoesNotExist:
+            return False
+        return not handler.read
 
     def get_parents(self):
         """

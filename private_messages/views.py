@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from collections import OrderedDict
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
@@ -24,7 +25,11 @@ class InboxView(PaginatorMixin, generic.ListView):
     template_name = 'pybb/private_messages/inbox.html'
 
     def get_queryset(self):
-        return MessageThread.objects.filter(messages__receivers=self.request.user).distinct()
+        return self.group_into_threads({'messages__receivers': self.request.user})
+
+    def group_into_threads(self, lookup):
+        inbox = OrderedDict(((thread, None) for thread in MessageThread.objects.filter(**lookup)))
+        return inbox.keys()
 
     @method_decorator(login_required)
     @method_decorator(vary_on_cookie)
@@ -35,7 +40,12 @@ class InboxView(PaginatorMixin, generic.ListView):
 class OutboxView(InboxView):
 
     def get_queryset(self):
-        return MessageThread.objects.filter(messages__sender=self.request.user).distinct()
+        return self.group_into_threads({'messages__sender': self.request.user})
+
+    def get_context_data(self, **kwargs):
+        ctx = super(OutboxView, self).get_context_data(**kwargs)
+        ctx['outbox'] = True
+        return ctx
 
 
 class MessageView(generic.DetailView):
