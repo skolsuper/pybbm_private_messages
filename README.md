@@ -22,5 +22,5 @@ Quick Start
         url(r'^forum/', include('private_messages.urls', namespace='private_messages')),
     ]
 ```
-4. Add `'private_messages.context_processors.unread_messages'` to you template context processors in settings.
+4. Add `'private_messages.context_processors.unread_messages'` to your template context processors in settings.
 5. Adding a `{% block private_messages %}{% endblock %}` to your `PYBB_TEMPLATE` will place a link to the inbox with the text: "Inbox" and a bootstrap badge adjacent to it with the number of unread messages, if there are any. For just the number of unread messages, use `{% block unread_msgs %}{% endblock %}`.
