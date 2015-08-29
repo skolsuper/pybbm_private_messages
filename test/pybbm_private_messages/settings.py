@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'private_messages',
     'pybb',
     'registration',
+    'debug_toolbar',
 )
 
 MIDDLEWARE_CLASSES = (

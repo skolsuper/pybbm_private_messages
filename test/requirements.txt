@@ -2,3 +2,4 @@ Django>=1.7
 pybbm>=0.16
 Pillow
 bbcode
+django_debug_toolbar
