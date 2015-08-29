@@ -53,6 +53,9 @@
                     <li>
                         {% block private_messages %}{% endblock %}
                     </li>
+                    <li>
+                        <a href="{% url 'private_messages:outbox' %}">Outbox</a>
+                    </li>
                     {% if request.user.is_superuser %}
                         <li>
                             <a href="{% url 'admin:index' %}">Admin interface</a>

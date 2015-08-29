@@ -50,7 +50,8 @@
     </tbody>
     <tfoot>
     <tr>
-        <td><a href="{% url 'private_messages:send_message' %}" class="btn btn-primary">Compose Message</a></td>
+        <td><a href="{% url 'private_messages:send_message' %}" class="btn btn-primary">{% trans 'Compose Message' %}</a></td>
+        <td><a href="{% url 'private_messages:outbox' %}" class="btn btn-primary">{% trans 'Sent Messages' %}</a></td>
     </tr>
     </tfoot>
 </table>

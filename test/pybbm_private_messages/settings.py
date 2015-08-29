@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'easy_thumbnails',
     'private_messages',
     'pybb',
     'registration',
@@ -68,6 +69,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'private_messages.context_processors.unread_messages',
+                'pybb.context_processors.processor',
             ],
         },
     },
@@ -106,3 +108,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Pybbm
+
+PYBB_AVATAR_WIDTH = 120
+PYBB_AVATAR_HEIGHT = 120
