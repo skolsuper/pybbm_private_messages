@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.urlresolvers import reverse_lazy
 from django.db.models import Q
 from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
@@ -49,7 +50,7 @@ class InboxView(PaginatorMixin, generic.ListView):
 
 class OutboxView(InboxView):
     def get_messages(self):
-        return PrivateMessage.objects.filter(sender=self.request.user, sender_deleted=False).select_related('thread')
+        return PrivateMessage.objects.filter(sender=self.request.user, sender_deleted=False)
 
     def get_context_data(self, **kwargs):
         ctx = super(OutboxView, self).get_context_data(**kwargs)
@@ -142,6 +143,33 @@ class SendMessageView(generic.CreateView):
             MessageHandler.objects.create(message=self.object, receiver=receiver)
 
         return HttpResponseRedirect(self.get_success_url())
+
+
+class DeleteMessageView(generic.DeleteView):
+    queryset = PrivateMessage.objects.all()
+    success_url = reverse_lazy('private_messages:inbox')
+    template_name = 'pybb/private_messages/confirm_delete.html'
+    context_object_name = 'message'
+
+    @method_decorator(login_required)
+    @method_decorator(vary_on_cookie)
+    def dispatch(self, request, *args, **kwargs):
+        return super(DeleteMessageView, self).dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.queryset.filter(Q(sender=user) | Q(receivers=user))
+
+    def delete(self, request, *args, **kwargs):
+        message = self.get_object(self.get_queryset())
+        if message.sender == self.request.user:
+            message.sender_deleted = True
+            message.save()
+        else:
+            handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
+            handler.deleted = True
+            handler.save()
+        return HttpResponseRedirect(self.success_url)
 
 
 def reply_subject(string):
