@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied, SuspiciousOperation
-from django.http import HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+from django.http import HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import generic
@@ -25,10 +26,19 @@ class InboxView(PaginatorMixin, generic.ListView):
     template_name = 'pybb/private_messages/inbox.html'
 
     def get_queryset(self):
-        return self.group_into_threads({'messages__receivers': self.request.user})
+        return self.group_into_threads(self.get_messages())
 
-    def group_into_threads(self, lookup):
-        inbox = OrderedDict(((thread, None) for thread in MessageThread.objects.filter(**lookup)))
+    def get_messages(self):
+        return PrivateMessage.objects.filter(messagehandler__receiver=self.request.user, messagehandler__deleted=False)
+
+    def group_into_threads(self, messages):
+        """
+        Get thread for each message and remove dupes. The reason for creating instances of MessageThread rather than
+        using message.thread is that the latter runs a useless query for thread.id WHERE thread.id = %s.
+        :param messages: list or queryset of PrivateMessage instances
+        :return: list of MessageThread instances.
+        """
+        inbox = OrderedDict((MessageThread(id=message.thread_id), None) for message in messages)
         return inbox.keys()
 
     @method_decorator(login_required)
@@ -38,9 +48,8 @@ class InboxView(PaginatorMixin, generic.ListView):
 
 
 class OutboxView(InboxView):
-
-    def get_queryset(self):
-        return self.group_into_threads({'messages__sender': self.request.user})
+    def get_messages(self):
+        return PrivateMessage.objects.filter(sender=self.request.user, sender_deleted=False).select_related('thread')
 
     def get_context_data(self, **kwargs):
         ctx = super(OutboxView, self).get_context_data(**kwargs)
@@ -49,7 +58,6 @@ class OutboxView(InboxView):
 
 
 class MessageView(generic.DetailView):
-
     queryset = PrivateMessage.objects.all()
     template_name = 'pybb/private_messages/message.html'
     context_object_name = 'thread'
@@ -63,13 +71,19 @@ class MessageView(generic.DetailView):
     def get_object(self, queryset=None):
         message = super(MessageView, self).get_object(queryset)
         if message.sender != self.request.user:
-            if self.request.user not in message.receivers.all():
-                raise PermissionDenied
-            handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
+            try:
+                handler = MessageHandler.objects.get(message=message, receiver=self.request.user, deleted=False)
+            except MessageHandler.DoesNotExist:
+                raise Http404
             handler.read = True
             handler.save()
+            deleted_filter = Q(messagehandler__receiver=self.request.user, messagehandler__deleted=False) | \
+                             Q(sender=self.request.user, sender_deleted=False)
+        else:
+            deleted_filter = Q(sender_deleted=False) |\
+                             Q(messagehandler__receiver=message.sender, messagehandler__deleted=False)
         thread = filter(None, [message.get_parent(), message])
-        thread.extend(message.get_children())
+        thread.extend(message.get_children().filter(deleted_filter))
         return thread
 
     def get_context_data(self, **kwargs):
@@ -79,7 +93,6 @@ class MessageView(generic.DetailView):
 
 
 class SendMessageView(generic.CreateView):
-
     template_name = 'pybb/private_messages/new.html'
     form_class = MessageForm
 
@@ -115,8 +128,8 @@ class SendMessageView(generic.CreateView):
         else:
             try:
                 parent = PrivateMessage.objects.get(pk=parent_pk)
-            except PrivateMessage.NotFound:
-                raise SuspiciousOperation
+            except PrivateMessage.DoesNotExist:
+                raise Http404
             thread = parent.thread
         self.object = PrivateMessage.objects.create(
             thread=thread,
@@ -124,14 +137,11 @@ class SendMessageView(generic.CreateView):
             sender_ip=self.request.META.get('REMOTE_ADDR', ''),
             subject=form.cleaned_data['subject'],
             body=form.cleaned_data['body'],
-            )
+        )
         for receiver in form.cleaned_data['receivers']:
             MessageHandler.objects.create(message=self.object, receiver=receiver)
 
         return HttpResponseRedirect(self.get_success_url())
-    
-    def get_success_url(self):
-        return self.object.get_absolute_url()
 
 
 def reply_subject(string):

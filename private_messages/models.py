@@ -102,6 +102,7 @@ class PrivateMessage(RenderableItem):
         """
         return [_InboxLink()]
 
+
 class _InboxLink(object):
     __slots__ = ()
 
