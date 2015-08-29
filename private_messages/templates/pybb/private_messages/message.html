@@ -5,7 +5,12 @@
 
 {% pybb_get_profile user=request.user as user_profile %}
 
+{% block breadcrumb %}
+    {% include 'pybb/breadcrumb.html' with object=this_message %}
+{% endblock %}
+
 {% block content %}
+{% with root_url=this_message.thread.head.get_absolute_url %}
 {% for message in thread %}
     <table class="table table-bordered post">
         {% pybb_get_profile user=message.sender as sender_profile %}
@@ -56,4 +61,5 @@
         </tbody>
     </table>
 {% endfor %}
+{% endwith %}
 {% endblock content %}

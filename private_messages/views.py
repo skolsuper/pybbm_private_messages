@@ -5,11 +5,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.vary import vary_on_cookie
-
 from pybb import defaults
 from pybb.util import get_markup_engine
 from pybb.views import PaginatorMixin
@@ -54,20 +52,19 @@ class MessageView(generic.DetailView):
 
     def get_object(self, queryset=None):
         message = super(MessageView, self).get_object(queryset)
-        if message.sender == self.request.user:
-            return message
-        if self.request.user not in message.receivers.all():
-            raise PermissionDenied
-        handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
-        handler.read = True
-        handler.save()
-        thread = [message.thread.get_parent(message), message] + list(message.thread.get_children(message))
-        return filter(None, thread)
+        if message.sender != self.request.user:
+            if self.request.user not in message.receivers.all():
+                raise PermissionDenied
+            handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
+            handler.read = True
+            handler.save()
+        thread = filter(None, [message.get_parent(), message])
+        thread.extend(list(message.get_children()))
+        return thread
 
     def get_context_data(self, **kwargs):
         ctx = super(MessageView, self).get_context_data(**kwargs)
-        message = super(MessageView, self).get_object()
-        ctx['root_url'] = message.thread.head.get_absolute_url()
+        ctx['this_message'] = super(MessageView, self).get_object()
         return ctx
 
 

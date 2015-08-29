@@ -7,7 +7,6 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
-
 from pybb.compat import get_user_model_path
 from pybb.models import RenderableItem
 
@@ -30,20 +29,9 @@ class MessageThread(models.Model):
     def tail(self):
         return self.messages.latest()
 
-    def get_parent(self, message):
-        assert message in self.messages.all(), "Cannot get parent of a message not in this thread"
-
-        try:
-            parent = message.thread.messages.filter(sent__lt=message.sent).latest()
-        except PrivateMessage.DoesNotExist:
-            return None
-        return parent
-
-    def get_children(self, message):
-        assert message in self.messages.all(), "Cannot get parent of a message not in this thread"
-
-        return message.thread.messages.filter(sent__gt=message.sent)
-
+    def get_parents(self, message):
+        assert self.messages.filter(message=message).exists(), "Cannot get parents of a message not in this thread"
+        return self.messages.filter(sent__lt=message.sent)
 
 
 @python_2_unicode_compatible
@@ -73,7 +61,7 @@ class PrivateMessage(RenderableItem):
     thread = models.ForeignKey(MessageThread, related_name='messages')
 
     def __str__(self):
-        return '{0} {1} {2}'.format(self.sender, _('Private Message'), self.uuid)
+        return '{0} {1}'.format(_('Private message from'), self.sender)
 
     def get_absolute_url(self):
         return reverse('private_messages:read_message', kwargs={'pk': self.uuid})
@@ -81,3 +69,30 @@ class PrivateMessage(RenderableItem):
     def save(self, *args, **kwargs):
         self.render()
         super(PrivateMessage, self).save(*args, **kwargs)
+
+    def get_children(self):
+        return self.thread.messages.filter(sent__gt=self.sent)
+
+    def get_parent(self):
+        try:
+            parent = self.thread.messages.filter(sent__lt=self.sent).latest()
+        except PrivateMessage.DoesNotExist:
+            return None
+        return parent
+
+    def get_parents(self):
+        """
+        This method is just a hack for adding the Inbox to the breadcrumbs in read_message view. To get all the parents
+        of a message, use message.thread.get_parents(message)
+        """
+        return [_InboxLink()]
+
+class _InboxLink(object):
+    __slots__ = ()
+
+    @staticmethod
+    def get_absolute_url():
+        return reverse('private_messages:inbox')
+
+    def __repr__(self):
+        return _('Inbox')
