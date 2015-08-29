@@ -3,12 +3,20 @@
 {% load url from future %}
 {% load i18n pybb_tags %}
 
-{% pybb_get_profile user=message.sender as sender_profile %}
 {% pybb_get_profile user=request.user as user_profile %}
 
 {% block content %}
+{% for message in thread %}
     <table class="table table-bordered post">
+        {% pybb_get_profile user=message.sender as sender_profile %}
         <thead class="post-header">
+        {% if forloop.first and root_url != message.get_absolute_url %}
+        <tr>
+            <th colspan="2">
+                <a href="{{ root_url }}">See all messages in thread</a>
+            </th>
+        </tr>
+        {% endif %}
         <tr>
         <th colspan="2">
             <a class="permalink" href="{{ message.get_absolute_url }}">#</a>
@@ -29,26 +37,6 @@
                 {% if request.user.is_superuser %}
                     <div class="post-extra-info">{{ message.sender_ip }}</div>
                 {% endif %}
-
-                <div class="post-controls">
-                    {% comment %} TODO Maybe allow sender to edit post while it is unread?
-                    {% if post|pybb_posted_by:user %}
-                        <a href="{% url 'pybb:edit_post' pk=post.id %}">{% trans "Edit" %}</a>
-                    {% endif %}
-                    {% if user.is_moderator %}
-                        <a onclick="pybb_delete_post('{% url 'pybb:delete_post' post.id %}',
-                                'post-{{ post.id }}', '{% trans 'Delete post?' %}'); return false;"
-                           href="{% url 'pybb:delete_post' post.id %}">{% trans "Delete" %}</a>
-                        {% if post.on_moderation %}
-                            <a href="{% url 'pybb:moderate_post' pk=post.id %}">{% trans "Approve post" %}</a>
-                        {% endif %}
-                    {% endif %}
-
-                    {% if perms.pybb.change_post and user.is_staff %}
-                        <a href="{% url 'admin:pybb_post_change' post.id %}">{% trans 'Admin' %}</a>
-                    {% endif %}
-                    {% endcomment %}
-                </div>
             </td>
             <td class="post-content">
                 {{ message.body_html|safe }}
@@ -67,4 +55,5 @@
         </tr>
         </tbody>
     </table>
+{% endfor %}
 {% endblock content %}

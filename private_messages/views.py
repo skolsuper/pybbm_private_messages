@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, SuspiciousOperation
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.vary import vary_on_cookie
@@ -43,7 +44,7 @@ class MessageView(generic.DetailView):
 
     queryset = PrivateMessage.objects.all()
     template_name = 'pybb/private_messages/message.html'
-    context_object_name = 'message'
+    context_object_name = 'thread'
     http_method_names = ['get', ]
 
     @method_decorator(login_required)
@@ -60,7 +61,14 @@ class MessageView(generic.DetailView):
         handler = MessageHandler.objects.get(message=message, receiver=self.request.user)
         handler.read = True
         handler.save()
-        return message
+        thread = [message.thread.get_parent(message), message] + list(message.thread.get_children(message))
+        return filter(None, thread)
+
+    def get_context_data(self, **kwargs):
+        ctx = super(MessageView, self).get_context_data(**kwargs)
+        message = super(MessageView, self).get_object()
+        ctx['root_url'] = message.thread.head.get_absolute_url()
+        return ctx
 
 
 class SendMessageView(generic.CreateView):

@@ -26,8 +26,24 @@ class MessageThread(models.Model):
     def head(self):
         return self.messages.earliest()
 
+    @property
     def tail(self):
         return self.messages.latest()
+
+    def get_parent(self, message):
+        assert message in self.messages.all(), "Cannot get parent of a message not in this thread"
+
+        try:
+            parent = message.thread.messages.filter(sent__lt=message.sent).latest()
+        except PrivateMessage.DoesNotExist:
+            return None
+        return parent
+
+    def get_children(self, message):
+        assert message in self.messages.all(), "Cannot get parent of a message not in this thread"
+
+        return message.thread.messages.filter(sent__gt=message.sent)
+
 
 
 @python_2_unicode_compatible
