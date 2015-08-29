@@ -59,7 +59,7 @@ class MessageView(generic.DetailView):
             handler.read = True
             handler.save()
         thread = filter(None, [message.get_parent(), message])
-        thread.extend(list(message.get_children()))
+        thread.extend(message.get_children())
         return thread
 
     def get_context_data(self, **kwargs):
