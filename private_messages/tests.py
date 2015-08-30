@@ -41,7 +41,7 @@ class LoremFuzzyAttribute(factory.fuzzy.BaseFuzzyAttribute):
         self.max_paras = max_paras
 
     def fuzz(self):
-        count = random.choice(range(1, self.max_paras))
+        count = random.choice(range(1, self.max_paras + 1))
         return '\n\n'.join(paragraphs(count, common=False))
 
 
@@ -86,6 +86,19 @@ class PrivateMessageTests(TestCase):
         response = self.client.get(reverse('private_messages:inbox'))
         self.assertRedirects(response, '{0}?next={1}'.format(reverse('auth_login'), reverse('private_messages:inbox')))
         self.client.login(username='alice', password='test')
+        response = self.client.get(reverse('private_messages:inbox'))
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse('private_messages:outbox'))
+        self.assertEqual(response.status_code, 200)
+
+        PrivateMessageFactory.create_batch(10, sender=self.bob, receivers=[self.alice])
+        response = self.client.get(reverse('private_messages:inbox'))
+        self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse('private_messages:outbox'))
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+
+        self.client.login(username='bob', password='test')
         response = self.client.get(reverse('private_messages:inbox'))
         self.assertEqual(response.status_code, 200)
         response = self.client.get(reverse('private_messages:outbox'))
