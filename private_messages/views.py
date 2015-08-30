@@ -40,7 +40,7 @@ class InboxView(PaginatorMixin, generic.ListView):
         :return: list of MessageThread instances.
         """
         inbox = OrderedDict((MessageThread(id=message.thread_id), None) for message in messages)
-        return inbox.keys()
+        return list(inbox.keys())
 
     @method_decorator(login_required)
     @method_decorator(vary_on_cookie)
