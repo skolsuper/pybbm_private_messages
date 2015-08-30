@@ -15,6 +15,7 @@ setup(
     install_requires=[
         'pybbm',
     ],
+    test_suite='runtests.runtests',
     license='MIT License',
     description='A private messaging plugin for the pybbm forum.',
     long_description=README,

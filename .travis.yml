@@ -1,0 +1,20 @@
+language: python
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+env:
+  - DJANGO="Django>=1.8,<1.9" DB=sqlite
+  - DJANGO="Django>=1.8,<1.9" DB=postgres
+  - DJANGO="Django>=1.8,<1.9" DB=mysql
+before_script:
+  - mysql -e 'create database pybbm;'
+  - psql -c 'create database pybbm;' -U postgres
+install:
+  - if [[ $DB == mysql ]]; then pip install -qU mysqlclient; fi
+  - if [[ $DB == postgres ]]; then pip install -qU psycopg2; fi
+  - pip install -qU $DJANGO
+  - CFLAGS="-O0" pip install -qU -r test/requirements.txt
+  - pip install coveralls
+script: coverage run --source=private_messages setup.py test
+after_success: coveralls

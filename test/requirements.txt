@@ -2,6 +2,8 @@ Django>=1.7
 pybbm>=0.16
 Pillow
 bbcode
+coverage
 django-registration-redux
 django-debug-toolbar
 easy_thumbnails
+factory_boy
