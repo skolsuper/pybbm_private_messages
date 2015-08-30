@@ -83,7 +83,10 @@ class MessageView(generic.DetailView):
         else:
             deleted_filter = Q(sender_deleted=False) |\
                              Q(messagehandler__receiver=message.sender, messagehandler__deleted=False)
-        thread = filter(None, [message.get_parent(), message])
+        thread = [message]
+        parent = message.get_parent()
+        if parent is not None:
+            thread.insert(0, parent)
         thread.extend(message.get_children().filter(deleted_filter))
         return thread
 
