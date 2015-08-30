@@ -1,5 +1,5 @@
 include LICENSE
-include README.rst
+include README.md
 recursive-include docs *
 recursive-include private_messages/static *
 recursive-include private_messages/templates *

@@ -1,6 +1,8 @@
+Django>=1.8
 pybbm>=0.16
 Pillow
 bbcode
 django-registration-redux
+django-debug-toolbar
 easy_thumbnails
 factory_boy
