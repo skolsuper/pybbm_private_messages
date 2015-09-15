@@ -125,3 +125,41 @@ class PrivateMessageTests(TestCase):
         response = self.client.get(message_url)
         self.assertEqual(response.status_code, 404)
         self.client.logout()
+
+    def test_send_message(self):
+        subject = 'Test Message Sending'
+        form_data = {
+            'subject': subject,
+            'body': LoremFuzzyAttribute().fuzz(),
+            'receivers': [self.bob.pk]
+        }
+        self.client.login(username='alice', password='test')
+        response = self.client.post(reverse('private_messages:send_message'), form_data)
+        message = PrivateMessage.objects.get(subject=subject, receivers=self.bob, sender=self.alice)
+        self.assertRedirects(response, reverse('private_messages:read_message', args=[message.pk]), target_status_code=200)
+        self.client.logout()
+
+    def test_strip_sender_from_receivers(self):
+        subject = 'Test Strip Sender'
+        form_data = {
+            'subject': subject,
+            'body': LoremFuzzyAttribute().fuzz(),
+            'receivers': [self.bob.pk, self.alice.pk]
+        }
+        self.client.login(username='alice', password='test')
+        response = self.client.post(reverse('private_messages:send_message'), form_data)
+        message = PrivateMessage.objects.get(subject=subject, receivers=self.bob, sender=self.alice)
+        self.assertRedirects(response, reverse('private_messages:read_message', args=[message.pk]), target_status_code=200)
+        self.assertNotIn(self.alice, message.receivers.all())
+
+        subject = 'Test Strip Sender 2'
+        form_data = {
+            'subject': subject,
+            'body': LoremFuzzyAttribute().fuzz(),
+            'receivers': [self.alice.pk, self.bob.pk, self.alice.pk]
+        }
+        response = self.client.post(reverse('private_messages:send_message'), form_data)
+        message = PrivateMessage.objects.get(subject=subject, receivers=self.bob, sender=self.alice)
+        self.assertRedirects(response, reverse('private_messages:read_message', args=[message.pk]), target_status_code=200)
+        self.assertNotIn(self.alice, message.receivers.all())
+        self.client.logout()

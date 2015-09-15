@@ -142,7 +142,8 @@ class SendMessageView(generic.CreateView):
             subject=form.cleaned_data['subject'],
             body=form.cleaned_data['body'],
         )
-        for receiver in form.cleaned_data['receivers']:
+        receivers = form.cleaned_data['receivers'].exclude(pk=self.object.sender.pk)
+        for receiver in receivers:
             MessageHandler.objects.create(message=self.object, receiver=receiver)
 
         return HttpResponseRedirect(self.get_success_url())
