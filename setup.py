@@ -9,11 +9,12 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='pybbm-private-messages',
-    version='0.2.2',
+    version='0.3.0',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
         'pybbm',
+        'django_select2'
     ],
     test_suite='runtests.runtests',
     license='MIT License',

@@ -11,8 +11,11 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.vary import vary_on_cookie
+
+from django_select2.views import Select2View
 from pybb import defaults
-from pybb.util import get_markup_engine
+from pybb.compat import get_username_field
+from pybb.util import get_markup_engine, get_pybb_profile_model
 from pybb.views import PaginatorMixin
 
 from private_messages.forms import MessageForm
@@ -174,6 +177,20 @@ class DeleteMessageView(generic.DeleteView):
             handler.deleted = True
             handler.save()
         return HttpResponseRedirect(self.success_url)
+
+
+class ReceiversSelect2View(Select2View):
+
+    @method_decorator(login_required)
+    def get(self, request, *args, **kwargs):
+        return super(ReceiversSelect2View, self).get(request, *args, **kwargs)
+
+    def get_results(self, request, term, page, context):
+        username_field = get_username_field()
+        lookup = {'user__{}__icontains'.format(username_field): term}
+        results = get_pybb_profile_model().objects.filter(**lookup)\
+            .values_list('user__id', 'user__{}'.format(username_field))
+        return ('nil', False, results)
 
 
 def reply_subject(string):

@@ -4,5 +4,6 @@ Pillow
 bbcode
 django-registration-redux
 django-debug-toolbar
+django_select2
 easy_thumbnails
 factory_boy
