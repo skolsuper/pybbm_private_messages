@@ -11,8 +11,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.vary import vary_on_cookie
-
-from django_select2.views import Select2View
+from django_select2 import Select2View
 from pybb import defaults
 from pybb.compat import get_username_field
 from pybb.util import get_markup_engine, get_pybb_profile_model
@@ -179,6 +178,12 @@ class DeleteMessageView(generic.DeleteView):
         return HttpResponseRedirect(self.success_url)
 
 
+def reply_subject(string):
+    if string.startswith('RE:'):
+        return string
+    return 'RE: ' + string
+
+
 class ReceiversSelect2View(Select2View):
 
     @method_decorator(login_required)
@@ -191,9 +196,3 @@ class ReceiversSelect2View(Select2View):
         results = get_pybb_profile_model().objects.filter(**lookup)\
             .values_list('user__id', 'user__{}'.format(username_field))
         return ('nil', False, results)
-
-
-def reply_subject(string):
-    if string.startswith('RE:'):
-        return string
-    return 'RE: ' + string

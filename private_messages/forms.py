@@ -3,17 +3,17 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-from django_select2.fields import HeavyModelSelect2MultipleChoiceField
 
-from pybb import defaults, util
+from django_select2.fields import HeavySelect2MultipleChoiceField
+from pybb import util
+
 from private_messages.models import PrivateMessage
-from private_messages.views import ReceiversSelect2View
 
 
 class MessageForm(forms.ModelForm):
 
     parent = forms.UUIDField(required=False, widget=forms.HiddenInput)
-    receivers = HeavyModelSelect2MultipleChoiceField(data_view=ReceiversSelect2View)
+    receivers = HeavySelect2MultipleChoiceField(data_view='private_messages:receivers_json')
 
     class Meta(object):
         model = PrivateMessage
@@ -24,8 +24,3 @@ class MessageForm(forms.ModelForm):
         labels = {
             'receivers': _('To'),
         }
-
-    def __init__(self, *args, **kwargs):
-        super(MessageForm, self).__init__(*args, **kwargs)
-        self.available_smiles = defaults.PYBB_SMILES
-        self.smiles_prefix = defaults.PYBB_SMILES_PREFIX
