@@ -2,28 +2,23 @@
 from __future__ import unicode_literals
 
 from django import forms
-from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
-
-from django_select2.fields import HeavyModelSelect2MultipleChoiceField
+from django_select2.widgets import HeavySelect2MultipleWidget
 from pybb import util
 
 from private_messages.models import PrivateMessage
-
-User = get_user_model()
 
 
 class MessageForm(forms.ModelForm):
 
     parent = forms.UUIDField(required=False, widget=forms.HiddenInput)
-    receivers = HeavyModelSelect2MultipleChoiceField(
-        data_view='private_messages:receivers_json', queryset=User.objects.all())
 
     class Meta(object):
         model = PrivateMessage
         fields = ('receivers', 'subject', 'body', 'parent')
         widgets = {
             'body': util.get_markup_engine().get_widget_cls(),
+            'receivers': HeavySelect2MultipleWidget(data_view='private_messages:receivers_json')
         }
         labels = {
             'receivers': _('To'),
