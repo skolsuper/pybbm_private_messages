@@ -113,6 +113,12 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+DEBUG_TOOLBAR = {
+    'JQUERY_URL': 'admin/js/jquery.js'
+}
+
+SELECT2_BOOTSTRAP = True
+
 # Pybbm
 
 PYBB_AVATAR_WIDTH = 120

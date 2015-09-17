@@ -13,9 +13,9 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'pybbm',
-        'django_select2'
+        'pybbm'
     ],
+    dependency_links=['git+git@github.com:applegrew/django-select2.git@master#egg=django_select2'],
     test_suite='runtests.runtests',
     license='MIT License',
     description='A private messaging plugin for the pybbm forum.',

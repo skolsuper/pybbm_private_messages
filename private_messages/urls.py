@@ -15,5 +15,5 @@ urlpatterns = [
     url(r'^message/(?P<pk>[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12})/delete/$',
         DeleteMessageView.as_view(), name='delete_message'),
     url(r'^new/$', SendMessageView.as_view(), name='send_message'),
-    url(r'^select2query/$', ReceiversSelect2View.as_view(), name='receivers_json')
+    url(r'^select2/$', ReceiversSelect2View.as_view(), name='select2')
 ]
