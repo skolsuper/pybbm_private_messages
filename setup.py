@@ -9,13 +9,13 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='pybbm-private-messages',
-    version='0.3.0',
+    version='0.3.1',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'pybbm'
+        'pybbm',
+        'django_select2'
     ],
-    dependency_links=['git+git@github.com:applegrew/django-select2.git@master#egg=django_select2'],
     test_suite='runtests.runtests',
     license='MIT License',
     description='A private messaging plugin for the pybbm forum.',

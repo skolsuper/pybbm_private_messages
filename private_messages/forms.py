@@ -18,7 +18,7 @@ class MessageForm(forms.ModelForm):
         fields = ('receivers', 'subject', 'body', 'parent')
         widgets = {
             'body': util.get_markup_engine().get_widget_cls(),
-            'receivers': HeavySelect2MultipleWidget(data_view='private_messages:receivers_json')
+            'receivers': HeavySelect2MultipleWidget(data_view='private_messages:select2')
         }
         labels = {
             'receivers': _('To'),
