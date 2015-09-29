@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/skolsuper/pybbm_private_messages.svg?branch=master)](https://travis-ci.org/skolsuper/pybbm_private_messages)
+
 =====
 PYBBM Private Messages
 =====
