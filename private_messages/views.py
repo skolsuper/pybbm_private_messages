@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views import generic
 from django.views.decorators.vary import vary_on_cookie
 from django_select2 import Select2View
-from pybb import defaults
+from pybb.settings import settings
 from pybb.compat import get_username_field
 from pybb.util import get_markup_engine, get_pybb_profile_model
 from pybb.views import PaginatorMixin
@@ -24,7 +24,7 @@ MarkupEngine = get_markup_engine()
 
 
 class InboxView(PaginatorMixin, generic.ListView):
-    paginate_by = defaults.PYBB_TOPIC_PAGE_SIZE
+    paginate_by = settings.PYBB_TOPIC_PAGE_SIZE
     context_object_name = 'message_list'
     template_name = 'pybb/private_messages/inbox.html'
 
